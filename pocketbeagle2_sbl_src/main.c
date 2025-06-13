@@ -404,7 +404,7 @@ int32_t App_runCpus(void)
 {
     int32_t status = SystemP_SUCCESS;
 
-    for(uint8_t cpuId = (CSL_CORE_ID_MAX - 1); cpuId >= 0; cpuId--)
+    for(int8_t cpuId = (CSL_CORE_ID_MAX - 1); cpuId >= 0; cpuId--)
     {
         /*Note: I inverted the cpu enabling order to release the secondary cores first as I want 
                 core0 to be the master of the A53-cluster SMP so it must be the last one to boot 
