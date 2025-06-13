@@ -39,6 +39,16 @@
 #include <drivers/bootloader.h>
 #include <drivers/rtc.h>
 
+#define PADCFG_CTRL0_CFG0_PADCONFIG3   0x000F400Cul
+#define PADCFG_CTRL0_CFG0_PADCONFIG4   0x000F4010ul
+#define PADCFG_CTRL0_CFG0_PADCONFIG5   0x000F4014ul
+#define PADCFG_CTRL0_CFG0_PADCONFIG6   0x000F4018ul
+
+#define GPIO_DIR01       0x00600010ul
+#define GPIO_OUT_DATA01  0x00600014ul
+#define GPIO_SET_DATA01  0x00600018ul
+#define GPIO_CLR_DATA01  0x0060001Cul
+
 #define BOOTLOADER_SD_CONFIG_FILENAME                   ("config.txt")
 #define BOOTLOADER_SD_A53_APPIMAGE_FILENAME             ("app_a53.bin")
 #define BOOTLOADER_SD_M4F_APPIMAGE_FILENAME             ("app_m4f.bin")
@@ -233,6 +243,15 @@ int main()
 
         if(socCpuCores > 0)
         {
+            /* turn on all the 4 leds on pocketbeagle2 board */
+            *(volatile uint32_t*)(PADCFG_CTRL0_CFG0_PADCONFIG3) &= ~(1ul <<21);
+            *(volatile uint32_t*)(PADCFG_CTRL0_CFG0_PADCONFIG4) &= ~(1ul <<21);
+            *(volatile uint32_t*)(PADCFG_CTRL0_CFG0_PADCONFIG5) &= ~(1ul <<21);
+            *(volatile uint32_t*)(PADCFG_CTRL0_CFG0_PADCONFIG6) &= ~(1ul <<21);
+            *(volatile uint32_t*)(GPIO_SET_DATA01) |= 0x78;
+            *(volatile uint32_t*)(GPIO_DIR01) &= ~(0x78);
+            *(volatile uint32_t*)(GPIO_OUT_DATA01) |= 0x78;
+
             /*run other cores and jump to application */
             status = App_runCpus();
 
@@ -249,19 +268,6 @@ int main()
 
     /* Call DPL deinit to close the tick timer and disable interrupts before jumping to the application */
     Dpl_deinit();
-
-    if(socCpuCores > 0)
-    {
-    /* turn on leds */
-        *(volatile uint32_t*)(0x000F400C) &= ~(1ul <<21);
-        *(volatile uint32_t*)(0x000F4010) &= ~(1ul <<21);
-        *(volatile uint32_t*)(0x000F4014) &= ~(1ul <<21);
-        *(volatile uint32_t*)(0x000F4018) &= ~(1ul <<21);
-
-        *(volatile uint32_t*)(0x00600018) |= 0x78;
-        *(volatile uint32_t*)(0x00600010) &= ~(0x78);
-        *(volatile uint32_t*)(0x00600014) |= 0x78;
-    }
 
     if(0 != (socCpuCores & (1u << CSL_CORE_ID_R5FSS0_0)))
     {
