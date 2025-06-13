@@ -403,10 +403,13 @@ int32_t App_PowerUpCpu(Bootloader_CpuInfo *cpuInfo)
 int32_t App_runCpus(void)
 {
     int32_t status = SystemP_SUCCESS;
-    uint8_t cpuId;
 
-    for(cpuId = 0; cpuId < CSL_CORE_ID_MAX; cpuId++)
+    for(uint8_t cpuId = (CSL_CORE_ID_MAX - 1); cpuId >= 0; cpuId--)
     {
+        /*Note: I inverted the cpu enabling order to release the secondary cores first as I want 
+                core0 to be the master of the A53-cluster SMP so it must be the last one to boot 
+                (the secondary cores will be waiting for an event from core0)
+        */
         if((socCpuCores & (1u << cpuId)) != 0)
         {
             status = Bootloader_runCpu(NULL, &bootCpuInfo[cpuId]);
